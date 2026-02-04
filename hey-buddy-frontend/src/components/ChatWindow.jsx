@@ -18,7 +18,7 @@ const ChatWindow = ({ socket, user }) => {
     const fetchMessages = async () => {
       const token = localStorage.getItem('token');
       try {
-        const res = await axios.get('http://localhost:5000/api/chat', {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/chat`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setMessages(res.data);
@@ -41,7 +41,7 @@ const ChatWindow = ({ socket, user }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:5000/api/chat', { text }, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/chat`, { text }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setText('');

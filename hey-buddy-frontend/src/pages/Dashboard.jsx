@@ -4,7 +4,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import ChatWindow from '../components/ChatWindow';
 
-const socket = io('http://localhost:5000');
+const socket = io(import.meta.env.VITE_API_URL);
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const Dashboard = () => {
     const fetchGoal = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/goals', {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/goals`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.data) setGoal(res.data);
@@ -71,7 +71,7 @@ const Dashboard = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.post('http://localhost:5000/api/goals', formData, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/goals`, formData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGoal(res.data.goal);
@@ -86,7 +86,7 @@ const Dashboard = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete('http://localhost:5000/api/goals', {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/goals`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGoal(null); // Go back to Form
