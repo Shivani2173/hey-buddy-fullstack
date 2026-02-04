@@ -17,9 +17,10 @@ const server = http.createServer(app);
 // 🔒 CORS CONFIGURATION (The Fix for the Red Error)
 // ====================================================
 const allowedOrigins = [
-  "http://localhost:5173",          // Localhost (Vite)
-  "http://localhost:3000",          // Localhost (Standard React)
-  "https://hey-buddy-fullstack.vercel.app" // 👈 THIS IS KEY: Your Live Vercel Frontend
+  "http://localhost:5173",           // Vite Localhost
+  "http://localhost:3000",           // React Localhost
+  "https://hey-buddy-fullstack.onrender.com", // 👈 YOUR LIVE FRONTEND (Check your dashboard URL!)
+  "https://hey-buddy-frontend.onrender.com"   // (Added this version too just in case)
 ];
 
 app.use(cors({
@@ -72,4 +73,3 @@ app.use(errorHandler);
 const port = process.env.PORT || 5000;
 
 server.listen(port, () => console.log(`Server started on port ${port}`));
-// Fixing CORS deployment
