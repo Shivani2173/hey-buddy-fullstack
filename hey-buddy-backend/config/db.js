@@ -2,11 +2,14 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    // 1. Use the Cloud link from Render (process.env.MONGO_URI)
+    // 2. Only use Localhost if the Cloud link is missing
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/hey-buddy');
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`.cyan.underline);
   } catch (error) {
-    console.error(`Error: ${error.message}`);
-    process.exit(1); // Stop everything if DB fails
+    console.log(error);
+    process.exit(1);
   }
 };
 
