@@ -1,49 +1,74 @@
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
-const http = require('http'); // New Import
-const { Server } = require('socket.io'); // New Import
+const colors = require('colors');
+const dotenv = require('dotenv').config();
+const { errorHandler } = require('./middleware/errorMiddleware');
 const connectDB = require('./config/db');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
+
+// Connect to Database
+connectDB();
 
 const app = express();
-const server = http.createServer(app); // Wrap express in HTTP server
+const server = http.createServer(app);
 
-// Socket.io Setup
-const io = new Server(server, {
-  cors: {
-    origin: "*", // Allow all connections (for now)
-    methods: ["GET", "POST"]
-  }
-});
+// ====================================================
+// 🔒 CORS CONFIGURATION (The Fix for the Red Error)
+// ====================================================
+const allowedOrigins = [
+  "http://localhost:5173",          // Localhost (Vite)
+  "http://localhost:3000",          // Localhost (Standard React)
+  "https://hey-buddy-fullstack.vercel.app" // 👈 THIS IS KEY: Your Live Vercel Frontend
+];
 
-// Make 'io' accessible in controllers
-app.set('socketio', io);
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true // Allow cookies/headers if needed
+}));
 
 // Middleware
 app.use(express.json());
-app.use(cors());
-
-connectDB();
+app.use(express.urlencoded({ extended: false }));
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/goals', require('./routes/goalRoutes'));
-app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes')); 
 
-// Socket Connection Logic
+// ====================================================
+// 💬 SOCKET.IO CONFIGURATION
+// ====================================================
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins, // Must match the Express origins above
+    methods: ["GET", "POST"],
+  },
+});
+
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log(`User Connected: ${socket.id}`);
 
-  // Join a specific room based on User ID
-  socket.on('join_room', (userId) => {
-    socket.join(userId);
-    console.log(`User ${userId} joined their personal room`);
+  // User joins a chat room (usually the Goal ID or Match ID)
+  socket.on('join_room', (data) => {
+    socket.join(data);
+    console.log(`User with ID: ${socket.id} joined room: ${data}`);
+  });
+
+  // User sends a message
+  socket.on('send_message', (data) => {
+    // Broadcast to everyone else in that room
+    socket.to(data.room).emit('receive_message', data);
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+    console.log('User Disconnected', socket.id);
   });
 });
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`)); // Change app.listen to server.listen
+// Error Handler
+app.use(errorHandler);
+
+const port = process.env.PORT || 5000;
+
+server.listen(port, () => console.log(`Server started on port ${port}`));
