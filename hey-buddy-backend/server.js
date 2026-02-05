@@ -1,5 +1,4 @@
 const express = require('express');
-const colors = require('colors');
 const dotenv = require('dotenv').config();
 const { errorHandler } = require('./middleware/errorMiddleware');
 const connectDB = require('./config/db');
@@ -7,20 +6,18 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 
-// Connect to Database
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
 
-// ====================================================
-// 🔒 CORS CONFIGURATION
-// ====================================================
+// CORS Configuration
 const allowedOrigins = [
-  "http://localhost:5173",           // Vite Localhost
-  "http://localhost:3000",           // React Localhost
-  "https://hey-buddy-fullstack.onrender.com", // Your Live Frontend
-  "https://hey-buddy-frontend.onrender.com"
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://hey-buddy-fullstack.onrender.com",
+  "https://hey-buddy-frontend.onrender.com",
+  "https://hey-buddy-fullstack.vercel.app" 
 ];
 
 app.use(cors({
@@ -37,9 +34,7 @@ app.use('/api/goals', require('./routes/goalRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes')); 
 
-// ====================================================
-// 💬 SOCKET.IO CONFIGURATION
-// ====================================================
+// Socket.io Configuration
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -47,18 +42,14 @@ const io = new Server(server, {
   },
 });
 
-// 👇 THIS IS THE CRITICAL FIX 👇
-app.set('socketio', io); 
-// 👆 Now your controllers can use socket.io!
+// Allow controllers to use socket.io
+app.set('socketio', io);
 
 io.on('connection', (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  // User joins their own personal room (based on User ID)
-  // This allows us to send notifications to specific users
   socket.on('join_room', (room) => {
     socket.join(room);
-    console.log(`User joined room: ${room}`);
   });
 
   socket.on('send_message', (data) => {
