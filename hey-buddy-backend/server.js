@@ -11,18 +11,11 @@ connectDB();
 const app = express();
 const server = http.createServer(app);
 
-// CORS Configuration
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://hey-buddy-fullstack.onrender.com",
-  "https://hey-buddy-frontend.onrender.com",
-  "https://hey-buddy-fullstack.vercel.app" 
-];
-
+// ====================================================
+// 🔓 THE FIX: ALLOW EVERYTHING (WILDCARD)
+// ====================================================
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: "*",  // Allow ANY website to connect
 }));
 
 // Middleware
@@ -32,17 +25,18 @@ app.use(express.urlencoded({ extended: false }));
 // Routes
 app.use('/api/goals', require('./routes/goalRoutes'));
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/chat', require('./routes/chatRoutes')); 
+app.use('/api/chat', require('./routes/chatRoutes'));
 
-// Socket.io Configuration
+// ====================================================
+// 💬 SOCKET.IO CONFIGURATION
+// ====================================================
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: "*", // Allow ANY website to connect to Sockets
     methods: ["GET", "POST"],
   },
 });
 
-// Allow controllers to use socket.io
 app.set('socketio', io);
 
 io.on('connection', (socket) => {
@@ -61,7 +55,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Error Handler
 app.use(errorHandler);
 
 const port = process.env.PORT || 5000;
