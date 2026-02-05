@@ -14,18 +14,18 @@ const app = express();
 const server = http.createServer(app);
 
 // ====================================================
-// 🔒 CORS CONFIGURATION (The Fix for the Red Error)
+// 🔒 CORS CONFIGURATION
 // ====================================================
 const allowedOrigins = [
   "http://localhost:5173",           // Vite Localhost
   "http://localhost:3000",           // React Localhost
-  "https://hey-buddy-fullstack.onrender.com", // 👈 YOUR LIVE FRONTEND (Check your dashboard URL!)
-  "https://hey-buddy-frontend.onrender.com"   // (Added this version too just in case)
+  "https://hey-buddy-fullstack.onrender.com", // Your Live Frontend
+  "https://hey-buddy-frontend.onrender.com"
 ];
 
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true // Allow cookies/headers if needed
+  credentials: true
 }));
 
 // Middleware
@@ -42,23 +42,26 @@ app.use('/api/chat', require('./routes/chatRoutes'));
 // ====================================================
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins, // Must match the Express origins above
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
   },
 });
 
+// 👇 THIS IS THE CRITICAL FIX 👇
+app.set('socketio', io); 
+// 👆 Now your controllers can use socket.io!
+
 io.on('connection', (socket) => {
   console.log(`User Connected: ${socket.id}`);
 
-  // User joins a chat room (usually the Goal ID or Match ID)
-  socket.on('join_room', (data) => {
-    socket.join(data);
-    console.log(`User with ID: ${socket.id} joined room: ${data}`);
+  // User joins their own personal room (based on User ID)
+  // This allows us to send notifications to specific users
+  socket.on('join_room', (room) => {
+    socket.join(room);
+    console.log(`User joined room: ${room}`);
   });
 
-  // User sends a message
   socket.on('send_message', (data) => {
-    // Broadcast to everyone else in that room
     socket.to(data.room).emit('receive_message', data);
   });
 
@@ -73,4 +76,3 @@ app.use(errorHandler);
 const port = process.env.PORT || 5000;
 
 server.listen(port, () => console.log(`Server started on port ${port}`));
-// Final CORS Fix Deployment
